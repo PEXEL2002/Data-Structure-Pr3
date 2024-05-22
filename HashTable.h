@@ -5,10 +5,9 @@ class HashTable{
     virtual void remove(K key) = 0;
     virtual V find(K key) = 0;
     virtual bool exists(K key) = 0;
-    virtual void size() = 0;
-    virtual void empty() = 0;
+    virtual int size() = 0;
+    virtual bool empty() = 0;
     virtual void keys() = 0;
     virtual void values() = 0;
     virtual void print() = 0;
-    virtual ~HashTable() = default;
 };
