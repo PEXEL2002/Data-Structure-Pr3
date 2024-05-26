@@ -42,15 +42,15 @@ class OpenAddressing : public HashTable<K, V>{
         OpenAddressing();
 /**
  * @brief Constructors
- * @param capacity: capacity of the table
+ * @param size: size of the table
 */
-        OpenAddressing(int capacity);
+        OpenAddressing(int size);
 /**
  * @brief Constructors
- * @param capacity: capacity of the table
+ * @param size: size of the table
  * @param type: type of hash function
 */
-        OpenAddressing(int capacity, int type);
+        OpenAddressing(int size, int type);
 /**
  * @brief Constructors
  * @param filename: name of the file
@@ -62,6 +62,13 @@ class OpenAddressing : public HashTable<K, V>{
  * @param type: type of hash function
 */
         OpenAddressing(std::string filename, int type);
+/**
+ * @brief Constructors
+ * @param filename: name of the file
+ * @param type: type of hash function
+ * @param size: size of the table
+*/
+        OpenAddressing(std::string filename, int type, int size);
 /**
  * @brief Insert function
  * @param key: key to insert
@@ -212,6 +219,13 @@ OpenAddressing<K, V>::OpenAddressing(std::string filename, int type){
 }
 
 template <typename K, typename V>
+OpenAddressing<K, V>::OpenAddressing(std::string filename, int type, int size){
+    /**
+     * @todo Implement this function
+    */
+}
+
+template <typename K, typename V>
 void OpenAddressing<K, V>::insert(K key, V value){
     int i = 0;
     while(_table[hash(key, i)]._key != emptyKey && _table[hash(key, i)]._key != key){
@@ -238,10 +252,14 @@ void OpenAddressing<K, V>::remove(K key){
 template <typename K, typename V>
 V OpenAddressing<K, V>::find(K key){
     int i = 0;
-    while(_table[hash(key, i)]._key != key){
+    while(_table[hash(key, i)]._key != key && i < _size){
         i++;
     }
-    return _table[hash(key, i)]._value;
+    if(_table[hash(key, i)]._key == key){
+        return _table[hash(key, i)]._value;
+    }else{
+        return INT_MIN;
+    }
 }
 
 template <typename K, typename V>
@@ -290,8 +308,8 @@ void OpenAddressing<K, V>::values(){
 template <typename K, typename V>
 void OpenAddressing<K, V>::print(){
     for(int i = 0; i < _size; i++){
-        //if(_table[i]._key != emptyKey){
+        if(_table[i]._key != emptyKey){
             std::cout << _table[i]._key << " " << _table[i]._value << std::endl;
-        //}
+        }
     }
 }
