@@ -1,11 +1,11 @@
 #pragma once
 #include "HashTable.h"
-#include  <vector>
+#include "Pair.h"
 #include <string>
 #include <climits>
 /**
  * @brief OpenAddressing class
- * @param _table: vector of pairs
+ * @param _table: array of pairs
  * @param _capacity: capacity of the table
  * @param _size: max size of the table
  * @param _type: type of hash functionc (0: Linear Probing, 1: Quadratic Probing, 2: Double Hashing)
@@ -15,11 +15,11 @@
 template <typename K, typename V>
 class OpenAddressing : public HashTable<K, V>{
     private:
-        std::vector<std::pair<K, V>> _table;
+        Pair<K, V> * _table;
         int _capacity;
         int _size = 10;
         int _type;
-        float _alfa = _capacity/_size;
+        float _alfa;
         K emptyKey = INT_MIN;
 /**
  * @brief Hash function
@@ -110,14 +110,16 @@ class OpenAddressing : public HashTable<K, V>{
 /**
  * @brief Destructor
 */
-        ~OpenAddressing(){}
+        ~OpenAddressing(){
+            delete[] _table;
+        }
 };
 
 template <typename K, typename V>
 int OpenAddressing<K, V>::hash(K key, int i){
-    int h1 = abs(key % _size);
-    int h2 = abs(1 + (key % (_size - 1)));
-
+    int span = 3; // pause between the following keys
+    int h1 = abs(key*span % _size);
+    int h2 = abs(1 + (key*span % (_size - 1)));
     switch (_type){
     case 0:
         return (h1 + i) % _size; // Linear Probing
@@ -133,45 +135,41 @@ int OpenAddressing<K, V>::hash(K key, int i){
 
 template <typename K, typename V>
 void OpenAddressing<K, V>::resizeUp(){
-    if(_alfa >= 0.8){
-        std::vector<std::pair<K, V>> newTable(_size*2, {emptyKey,0});
-        for(int i = 0; i < _size; i++){
-            if(_table[i].first != emptyKey){
-                int index = hash(_table[i].first, 0);
-                for(int j = 0; j < _size; j++){
-                    if(newTable[index].first == emptyKey){
-                        newTable[index].first = _table[i].first;
-                        newTable[index].second = _table[i].second;
-                        break;
-                    }
-                    index = hash(_table[i].first, j);
+    _alfa = static_cast<float>(_capacity) / static_cast<float>(_size);
+    if(_alfa > 0.80){
+        Pair<K, V> * temp = new Pair<K, V>[_size*2];
+        _size = _size*2;
+        for(int i = 0; i < _size/2; i++){
+            if(_table[i]._key != emptyKey){
+                int j = 0;
+                while(temp[hash(_table[i]._key, j)]._key != emptyKey){
+                    j++;
                 }
+                temp[hash(_table[i]._key, j)] = _table[i];
             }
         }
-        _table = newTable;
-        _size = _size*2;
+        delete[] _table;
+        _table = temp;
     }
 }
 
 template <typename K, typename V>
 void OpenAddressing<K, V>::resizeDown(){
-    if(_alfa <= 0.2){
-        std::vector<std::pair<K, V>> newTable(_size/2, {emptyKey,0});
-        for(int i = 0; i < _size; i++){
-            if(_table[i].first != emptyKey){
-                int index = hash(_table[i].first, 0);
-                for(int j = 0; j < _size; j++){
-                    if(newTable[index].first == emptyKey){
-                        newTable[index].first = _table[i].first;
-                        newTable[index].second = _table[i].second;
-                        break;
-                    }
-                    index = hash(_table[i].first, j);
+    _alfa = static_cast<float>(_capacity) / static_cast<float>(_size);
+    if(_alfa <=0.20){
+        _size = _size/2;
+        Pair<K, V> * temp = new Pair<K, V>[_size/2];
+        for(int i = 0; i < _size*2; i++){
+            if(_table[i]._key != emptyKey){
+                int j = 0;
+                while(temp[hash(_table[i]._key, j)]._key != emptyKey){
+                    j++;
                 }
+                temp[hash(_table[i]._key, j)] = _table[i];
             }
         }
-        _table = newTable;
-        _capacity = _capacity/2;
+        delete[] _table;
+        _table = temp;
     }
 }
 
@@ -180,10 +178,7 @@ OpenAddressing<K, V>::OpenAddressing(){
     _capacity = 0;
     _size = 10;
     _type = 0;
-    _table.resize(_size);
-    for(int i = 0; i < _size; i++){
-        _table[i].first = emptyKey;
-    }
+    _table = new Pair<K, V>[_size];
 }
 
 template <typename K, typename V>
@@ -191,10 +186,7 @@ OpenAddressing<K, V>::OpenAddressing(int size){
     _capacity = 0;
     _size = size;
     _type = 0;
-    _table.resize(_size);
-    for(int i = 0; i < _size; i++){
-        _table[i].first = emptyKey;
-    }
+    _table = new Pair<K, V>[_size];
 }
 
 template <typename K, typename V>
@@ -202,10 +194,7 @@ OpenAddressing<K, V>::OpenAddressing(int size, int type){
     _capacity = 0;
     _size = size;
     _type = type;
-    _table.resize(_size);
-    for(int i = 0; i < _size; i++){
-        _table[i].first = emptyKey;
-    }
+    _table = new Pair<K, V>[_size];
 }
 
 template <typename K, typename V>
@@ -224,96 +213,85 @@ OpenAddressing<K, V>::OpenAddressing(std::string filename, int type){
 
 template <typename K, typename V>
 void OpenAddressing<K, V>::insert(K key, V value){
-    int index = hash(key, 0);
-    for(int i = 0; i < _size; i++){
-        if(_table[index].first == emptyKey){
-            _table[index].first = key;
-            _table[index].second = value;
-            _capacity++;
-            _alfa = _capacity/_size;
-            resizeUp();
-            return;
-        }
-        index = hash(key, i);
+    int i = 0;
+    while(_table[hash(key, i)]._key != emptyKey && _table[hash(key, i)]._key != key){
+        i++;
     }
-    
+    if(_table[hash(key, i)]._key != key){
+        _table[hash(key, i)] = Pair<K, V>(key, value);
+        _capacity++;
+        resizeUp();
+    }
 }
 
-template <typename K, typename V>   
+template <typename K, typename V>
 void OpenAddressing<K, V>::remove(K key){
-    if(!exists(key) || empty()){
-        return;
+    int i = 0;
+    while(_table[hash(key, i)]._key != key){
+        i++;
     }
-    int index = hash(key, 0);
-    for(int i = 0; i < _size; i++){
-        if(_table[index].first == key){
-            _table[index].first = emptyKey;
-            _capacity--;
-            _alfa = _capacity/_size;
-            resizeDown();
-            return;
-        }
-        index = hash(key, i);
-    }
+    _table[hash(key, i)] = Pair<K, V>();
+    _capacity--;
+    resizeDown();
 }
 
 template <typename K, typename V>
 V OpenAddressing<K, V>::find(K key){
-    int index = hash(key, 0);
-    for(int i = 0; i < _size; i++){
-        if(_table[index].first == key){
-            return _table[index].second;
-        }
-        index = hash(key, i);
+    int i = 0;
+    while(_table[hash(key, i)]._key != key){
+        i++;
     }
-    return -1;
+    return _table[hash(key, i)]._value;
 }
 
 template <typename K, typename V>
 bool OpenAddressing<K, V>::exists(K key){
-    int index = hash(key, 0);
-    for(int i = 0; i < _size; i++){
-        if(_table[index].first == key){
-            return true;
-        }
-        index = hash(key, i);
+    int i = 0;
+    while(_table[hash(key, i)]._key != key && i < _size){
+        i++;
+    }
+    if(_table[hash(key, i)]._key == key){
+        return true;
     }
     return false;
 }
 
 template <typename K, typename V>
 int OpenAddressing<K, V>::size(){
-    return _capacity;
+    return _size;
 }
 
 template <typename K, typename V>
 bool OpenAddressing<K, V>::empty(){
-    return _capacity == 0;
+    if(_capacity == 0){
+        return true;
+    }
+    return false;
 }
 
 template <typename K, typename V>
 void OpenAddressing<K, V>::keys(){
-    for(auto& elem : _table){
-        if(elem.first != emptyKey){
-            std::cout << elem.first << std::endl;
+    for(int i = 0; i < _size; i++){
+        if(_table[i]._key != emptyKey){
+            std::cout << _table[i]._key << std::endl;
         }
     }
 }
 
 template <typename K, typename V>
 void OpenAddressing<K, V>::values(){
-    for(auto& elem : _table){
-        if(elem.first != emptyKey){
-            std::cout << elem.first << std::endl;
+    for(int i = 0; i < _size; i++){
+        if(_table[i]._key != emptyKey){
+            std::cout << _table[i]._value << std::endl;
         }
     }
 }
 
 template <typename K, typename V>
 void OpenAddressing<K, V>::print(){
-    for(auto& elem : _table){
-        if(elem.first != emptyKey){
-            std::cout << elem.first << " " << elem.second << std::endl;
-        }
+    for(int i = 0; i < _size; i++){
+        //if(_table[i]._key != emptyKey){
+            std::cout << _table[i]._key << " " << _table[i]._value << std::endl;
+        //}
     }
 }
