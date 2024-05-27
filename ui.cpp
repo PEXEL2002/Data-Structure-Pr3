@@ -29,7 +29,7 @@ void tests(){
     int sizes[8] = {1000, 2000, 4000, 8000, 16000, 32000, 64000, 128000};
     //int sizes[4] = {1000, 2000, 4000, 8000};
     int sets = 1;
-    int iterations = 1;
+    int iterations = 100;
     OpenAddressing<int, int> * openAddressing;
     SeparateChaining<int, int> * separateChaining;
     std::string filename = "test_";
@@ -81,7 +81,7 @@ void tests(){
             file << "OpenAddressing; " << size << "; Find; " << time/iterations << "\n";
             std::cout << "OpenAddressing; " << size << "; Find; " << time/iterations << "\n";
             time = 0;
-            /**
+
             //SeparateChaining modulo
             for(int i = 0; i < iterations; i++){
                 separateChaining = new SeparateChaining<int, int>(filename + ".txt", size*2);
@@ -97,7 +97,7 @@ void tests(){
             for(int i = 0; i < iterations; i++){
                 separateChaining = new SeparateChaining<int, int>(filename + ".txt", size*2);
                 auto start = std::chrono::high_resolution_clock::now();
-                separateChaining->remove(generateNumber(0, INT_MAX));
+                separateChaining->remove(generateNumber(0, size));
                 auto end = std::chrono::high_resolution_clock::now();
                 time += std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
                 delete separateChaining;
@@ -108,7 +108,7 @@ void tests(){
             for(int i = 0; i < iterations; i++){
                 separateChaining = new SeparateChaining<int, int>(filename + ".txt", size*2);
                 auto start = std::chrono::high_resolution_clock::now();
-                separateChaining->find(generateNumber(0, INT_MAX));
+                separateChaining->find(generateNumber(0, size));
                 auto end = std::chrono::high_resolution_clock::now();
                 time += std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
                 delete separateChaining;
@@ -116,7 +116,7 @@ void tests(){
             file << "SeparateChaining; " << size << "; Find; " << time/iterations << "\n";
             std::cout << "SeparateChaining; " << size << "; Find; " << time/iterations << "\n";
             time = 0;
-            */
+            
         }
     }
     file.close();
