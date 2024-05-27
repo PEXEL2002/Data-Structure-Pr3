@@ -3,12 +3,13 @@
 #include "Pair.h"
 #include <string>
 #include <climits>
+#include <iostream>
+#include <fstream>
 /**
  * @brief OpenAddressing class
  * @param _table: array of pairs
  * @param _capacity: capacity of the table
  * @param _size: max size of the table
- * @param _type: type of hash functionc (0: Linear Probing, 1: Quadratic Probing, 2: Double Hashing)
  * @param _alfa: load factor
  * @param emptyKey: empty key
 */
@@ -18,7 +19,6 @@ class OpenAddressing : public HashTable<K, V>{
         Pair<K, V> * _table;
         int _capacity;
         int _size = 10;
-        int _type;
         float _alfa;
         K emptyKey = INT_MIN;
 /**
@@ -47,28 +47,10 @@ class OpenAddressing : public HashTable<K, V>{
         OpenAddressing(int size);
 /**
  * @brief Constructors
- * @param size: size of the table
- * @param type: type of hash function
-*/
-        OpenAddressing(int size, int type);
-/**
- * @brief Constructors
  * @param filename: name of the file
-*/
-        OpenAddressing(std::string filename);
-/**
- * @brief Constructors
- * @param filename: name of the file
- * @param type: type of hash function
-*/
-        OpenAddressing(std::string filename, int type);
-/**
- * @brief Constructors
- * @param filename: name of the file
- * @param type: type of hash function
  * @param size: size of the table
 */
-        OpenAddressing(std::string filename, int type, int size);
+        OpenAddressing(std::string filename, int size);
 /**
  * @brief Insert function
  * @param key: key to insert
@@ -126,18 +108,7 @@ template <typename K, typename V>
 int OpenAddressing<K, V>::hash(K key, int i){
     int span = 3; // pause between the following keys
     int h1 = abs(key*span % _size);
-    int h2 = abs(1 + (key*span % (_size - 1)));
-    switch (_type){
-    case 0:
-        return (h1 + i) % _size; // Linear Probing
-    case 1:
-        return (h1 + i*i*3 + i) % _size; // Quadratic Probing
-    case 2:
-        return (h1 + i*h2) % _size; // Double Hashing
-    default:
-        return (h1 + i) % _size; // Linear Probing
-    }
-    
+    return (h1 + i) % _size; // Linear Probing
 }
 
 template <typename K, typename V>
@@ -184,7 +155,6 @@ template <typename K, typename V>
 OpenAddressing<K, V>::OpenAddressing(){
     _capacity = 0;
     _size = 10;
-    _type = 0;
     _table = new Pair<K, V>[_size];
 }
 
@@ -192,37 +162,25 @@ template <typename K, typename V>
 OpenAddressing<K, V>::OpenAddressing(int size){
     _capacity = 0;
     _size = size;
-    _type = 0;
     _table = new Pair<K, V>[_size];
 }
 
 template <typename K, typename V>
-OpenAddressing<K, V>::OpenAddressing(int size, int type){
-    _capacity = 0;
+OpenAddressing<K,V>::OpenAddressing(std::string filename, int size)  {
     _size = size;
-    _type = type;
     _table = new Pair<K, V>[_size];
-}
-
-template <typename K, typename V>
-OpenAddressing<K, V>::OpenAddressing(std::string filename){
-    /**
-     * @todo Implement this function
-    */
-}
-
-template <typename K, typename V>
-OpenAddressing<K, V>::OpenAddressing(std::string filename, int type){
-    /**
-     * @todo Implement this function
-    */
-}
-
-template <typename K, typename V>
-OpenAddressing<K, V>::OpenAddressing(std::string filename, int type, int size){
-    /**
-     * @todo Implement this function
-    */
+    _capacity = 0;
+    std::ifstream file(filename);
+    if (file.is_open()) {
+        K key;
+        V value;
+        while (file >> key >> value) {
+            insert(key, value);
+        }
+        file.close();
+    } else {
+        std::cout << "File not found" << std::endl;
+    }
 }
 
 template <typename K, typename V>
@@ -241,7 +199,7 @@ void OpenAddressing<K, V>::insert(K key, V value){
 template <typename K, typename V>
 void OpenAddressing<K, V>::remove(K key){
     int i = 0;
-    while(_table[hash(key, i)]._key != key){
+    while(_table[hash(key, i)]._key != key && i < _size-hash(key, 0)){
         i++;
     }
     _table[hash(key, i)] = Pair<K, V>();
@@ -252,7 +210,7 @@ void OpenAddressing<K, V>::remove(K key){
 template <typename K, typename V>
 V OpenAddressing<K, V>::find(K key){
     int i = 0;
-    while(_table[hash(key, i)]._key != key && i < _size){
+    while(_table[hash(key, i)]._key != key && i < _size-hash(key, 0)){
         i++;
     }
     if(_table[hash(key, i)]._key == key){
@@ -309,7 +267,7 @@ template <typename K, typename V>
 void OpenAddressing<K, V>::print(){
     for(int i = 0; i < _size; i++){
         if(_table[i]._key != emptyKey){
-            std::cout << _table[i]._key << " " << _table[i]._value << std::endl;
+            std::cout << _table[i]._key << "->" << _table[i]._value << std::endl;
         }
     }
 }
