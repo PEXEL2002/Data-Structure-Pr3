@@ -1,6 +1,7 @@
 #pragma once
 #include "HashTable.h"
 #include "Pair.h"
+#include <iostream>
 #include <string>
 #include <climits>
 /**
@@ -9,7 +10,6 @@
  * @param _bucketSize: size of the bucket
  * @param _capacity: capacity of the table
  * @param _size: max size of the table
- * @param _type: type of hash functionc (0: Modulo Hashing, 1: Hashing with the suffering of Prime Numbers, 2: Fibonacci Hashing)
  * @param _alfa: load factor
 */
 template <typename K, typename V>
@@ -19,7 +19,7 @@ class SeparateChaining : public HashTable<K, V>{
         int _bucketSize = 50;
         int _capacity;
         int _size;
-        int _type;
+        int _sizetemp;
         float _alfa;
 /**
  * @brief Hash function
@@ -52,30 +52,10 @@ class SeparateChaining : public HashTable<K, V>{
         SeparateChaining(int size);
 /**
  * @brief Constructors
- * @param capacity: capacity of the table
- * @param type: type of hash function
-*/
-        SeparateChaining(int size, int type);
-/**
- * @brief Constructors
  * @param filename: name of the file
- * 
- * @param type: type of hash function
-*/
-        SeparateChaining(std::string filename);
-/**
- * @brief Constructors
- * @param filename: name of the file
- * @param type: type of hash function
-*/
-        SeparateChaining(std::string filename, int type);
-/**
- * @brief Constructors
- * @param filename: name of the file
- * @param type: type of hash function
  * @param size: size of the table
 */
-        SeparateChaining(std::string filename, int type, int size);
+        SeparateChaining(std::string filename, int size);
 /**
  * @brief Insert function
  * @param key: key to insert
@@ -133,64 +113,69 @@ class SeparateChaining : public HashTable<K, V>{
 };
 template <typename K, typename V>
 int SeparateChaining<K, V>::hash(K key){
-    double goldenRatio = 1.618033988749895; // Golden Ratio
-    double fractionalPart = key * goldenRatio; // Get the fractional part of the number
-    switch (_type){
-    case 0:
-        return abs(key % _size); // Modulo Hashing
-    case 1:
-        return abs((31*key) % _size); // Hashing with the suffering of Prime Numbers
-    case 2: // Fibonacci Hashing
-        fractionalPart -= static_cast<int>(fractionalPart);  // Get the fractional part of the number
-        return abs(static_cast<unsigned int>(_size * fractionalPart)); // Multiply the fractional part with the table size
-    default:
-        return abs(key % _size); // Modulo Hashing
-    }
+    return abs(key % _size); // Modulo Hashing
 }
 
 template <typename K, typename V>
 void SeparateChaining<K, V>::resizeUp(){
-    _alfa = static_cast<float>(_capacity) / static_cast<float>(_size);
-    if(_alfa >= 0.8){
-        _size = _size * 2;
-        Pair<K, V> ** tempTable = new Pair<K, V>*[_size];
-        for(int i = 0; i < _size; i++){
-            tempTable[i] = new Pair<K, V>[_bucketSize];
-        }
-        for(int i = 0; i < _size/2; i++){
-            for(int j = 0; j < _bucketSize; j++){
-                tempTable[hash(_table[i][j]._key)][j] = _table[i][j];
+    int new_size = _size * 2;
+    Pair<K, V> **new_table = new Pair<K, V>*[new_size];
+    for (int i = 0; i < new_size; i++) {
+        new_table[i] = new Pair<K, V>[_bucketSize];
+    }
+    for (int i = 0; i < _size; i++) {
+        for (int j = 0; j < _bucketSize; j++) {
+            if (_table[i][j]._key != INT_MIN) {
+                int new_index = hash(_table[i][j]._key);
+                int k = 0;
+                while (new_table[new_index][k]._key != INT_MIN && k < _bucketSize) {
+                    k++;
+                    if (k == _bucketSize) break;
+                }
+                if (k < _bucketSize) {
+                    new_table[new_index][k] = _table[i][j];
+                }
             }
         }
-        for(int i = 0; i < _size/2; i++){
-            delete[] _table[i];
-        }
-        delete[] _table;
-        _table = tempTable;
     }
+    for (int i = 0; i < _size; i++) {
+        delete[] _table[i];
+    }
+    delete[] _table;
+    _table = new_table;
+    _size = new_size;
 }
 
 template <typename K, typename V>
-void SeparateChaining<K, V>::resizeDown(){
-    _alfa = static_cast<float>(_capacity) / static_cast<float>(_size);
-    if(_alfa <= 0.2){
-        _size = _size / 2;
-        Pair<K, V> ** tempTable = new Pair<K, V>*[_size];
-        for(int i = 0; i < _size; i++){
-            tempTable[i] = new Pair<K, V>[_bucketSize];
-        }
-        for(int i = 0; i < _size*2; i++){
-            for(int j = 0; j < _bucketSize; j++){
-                tempTable[hash(_table[i][j]._key)][j] = _table[i][j];
+void SeparateChaining<K, V>::resizeDown() {
+    int new_size = _size / 2;
+    Pair<K, V> ** new_table = new Pair<K, V>*[new_size];
+    for (int i = 0; i < new_size; i++) {
+        new_table[i] = new Pair<K, V>[_bucketSize];
+    }
+    for (int i = 0; i < _size; i++) {
+        for (int j = 0; j < _bucketSize; j++) {
+            if (_table[i][j]._key != INT_MIN) {
+                int new_index = hash(_table[i][j]._key) % new_size;
+                int k = 0;
+                while (new_table[new_index][k]._key != INT_MIN && k < _bucketSize) {
+                    k++;
+                    if (k == _bucketSize) break;
+                }
+                if (k < _bucketSize) {
+                    new_table[new_index][k] = _table[i][j];
+                }
             }
         }
-        for(int i = 0; i < _size*2; i++){
-            delete[] _table[i];
-        }
-        delete[] _table;
-        _table = tempTable;
     }
+    for (int i = 0; i < _size; i++) {
+        delete[] _table[i];
+    }
+    delete[] _table;
+    _table = new_table;
+    _size = new_size;
 }
+
 
 template <typename K, typename V>
 void SeparateChaining<K, V>::refactorBucket(int index){
@@ -218,7 +203,6 @@ SeparateChaining<K, V>::SeparateChaining(){
         _table[i] = new Pair<K, V>[_bucketSize];
     }
     _capacity = 0;
-    _type = 0;
 }
 
 template <typename K, typename V>
@@ -229,66 +213,76 @@ SeparateChaining<K, V>::SeparateChaining(int size){
         _table[i] = new Pair<K, V>[_bucketSize];
     }
     _capacity = 0;
-    _type = 0;
 
 }
 
 template <typename K, typename V>
-SeparateChaining<K, V>::SeparateChaining(int size, int type){
+SeparateChaining<K, V>::SeparateChaining(std::string filename, int size){
     _size = size;
     _table = new Pair<K, V>*[_size];
     for(int i = 0; i < _size; i++){
         _table[i] = new Pair<K, V>[_bucketSize];
     }
     _capacity = 0;
-    _type = type;
-}
-
-template <typename K, typename V>
-SeparateChaining<K, V>::SeparateChaining(std::string filename){
-    /**
-     * @todo Implement this function
-    */
-}
-
-template <typename K, typename V>
-SeparateChaining<K, V>::SeparateChaining(std::string filename, int type){
-    /**
-     * @todo Implement this function
-    */
-}
-
-template <typename K, typename V>
-SeparateChaining<K, V>::SeparateChaining(std::string filename, int type, int size){
-    /**
-     * @todo Implement this function
-    */
+    std::ifstream file(filename);
+    if (file.is_open()) {
+        K key;
+        V value;
+        while (file >> key >> value) {
+            insert(key, value);
+        }
+        file.close();
+    } else {
+        std::cout << "File not found" << std::endl;
+    }
 }
 
 template <typename K, typename V>
 void SeparateChaining<K, V>::insert(K key, V value){
+    int index = hash(key);
     int i = 0;
-    while(_table[hash(key)][i]._key != INT_MIN && _table[hash(key)][i]._key != key){
+    while (i < _bucketSize && _table[index][i]._key != INT_MIN && _table[index][i]._key != key) {
         i++;
     }
-    if(_table[hash(key)][i]._key != key){
-        _table[hash(key)][i] = Pair<K, V>(key, value);
-        _capacity++;
+    if (i < _bucketSize) {
+        if (_table[index][i]._key != key) {
+            _table[index][i] = Pair<K, V>(key, value);
+            _capacity++;
+            _alfa = static_cast<float>(_capacity) / static_cast<float>(_size);
+            if(_alfa >= 3){
+                resizeUp();
+            }
+        }
+    } else {
         resizeUp();
     }
 }
 
 template <typename K, typename V>
-void SeparateChaining<K, V>::remove(K key){
-    int i = 0;
-    while(_table[hash(key)][i]._key != key){
-        i++;
+void SeparateChaining<K, V>::remove(K key) {
+    int index = hash(key);
+    bool found = false;
+    int i;
+    for (i = 0; i < _bucketSize; i++) {
+        if (_table[index][i]._key == key) {
+            found = true;
+            break;
+        }
+        if (_table[index][i]._key == INT_MIN) {
+            break;
+        }
     }
-    _table[hash(key)][i] = Pair<K, V>();
-    _capacity--;
-    refactorBucket(hash(key));
-    resizeDown();
+    if (found) {
+        for (int j = i; j < _bucketSize - 1; j++) {
+            _table[index][j] = _table[index][j + 1];
+        }
+        _table[index][_bucketSize - 1] = Pair<K, V>();
+
+        _capacity--;
+        resizeDown();
+    }
 }
+
 
 template <typename K, typename V>
 V SeparateChaining<K, V>::find(K key){
@@ -355,7 +349,7 @@ void SeparateChaining<K, V>::print(){
     for(int i = 0; i < _size; i++){
         for(int j = 0; j < _bucketSize; j++){
             if(_table[i][j]._key != INT_MIN){
-                std::cout << _table[i][j]._key << " " << _table[i][j]._value << std::endl;
+                std::cout << _table[i][j]._key << "->" << _table[i][j]._value << std::endl;
             }
         }
     }
