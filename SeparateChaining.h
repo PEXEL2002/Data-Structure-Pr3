@@ -218,8 +218,9 @@ SeparateChaining<K, V>::SeparateChaining(int size){
 
 template <typename K, typename V>
 SeparateChaining<K, V>::SeparateChaining(std::string filename, int size){
-    _size = size/2;
-    _table = new Pair<K, V>*[_size/2];
+    int optimal_size = size/2;
+    _size = optimal_size;
+    _table = new Pair<K, V>*[_size];
     for(int i = 0; i < _size; i++){
         _table[i] = new Pair<K, V>[_bucketSize];
     }

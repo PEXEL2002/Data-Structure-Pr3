@@ -134,7 +134,7 @@ void OpenAddressing<K, V>::resizeUp(){
 template <typename K, typename V>
 void OpenAddressing<K, V>::resizeDown(){
     _alfa = static_cast<float>(_capacity) / static_cast<float>(_size);
-    if(_alfa <=0.20){
+    if(_alfa <=0.25){
         _size = _size/2;
         Pair<K, V> * temp = new Pair<K, V>[_size/2];
         for(int i = 0; i < _size*2; i++){
@@ -167,8 +167,9 @@ OpenAddressing<K, V>::OpenAddressing(int size){
 
 template <typename K, typename V>
 OpenAddressing<K,V>::OpenAddressing(std::string filename, int size)  {
-    _size = size*2;
-    _table = new Pair<K, V>[_size*2];
+    int optimal_size = size/0.5;
+    _size = optimal_size;
+    _table = new Pair<K, V>[_size];
     _capacity = 0;
     std::ifstream file(filename);
     if (file.is_open()) {
@@ -239,10 +240,7 @@ int OpenAddressing<K, V>::size(){
 
 template <typename K, typename V>
 bool OpenAddressing<K, V>::empty(){
-    if(_capacity == 0){
-        return true;
-    }
-    return false;
+    return _capacity == 0;
 }
 
 template <typename K, typename V>
