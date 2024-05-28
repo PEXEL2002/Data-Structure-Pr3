@@ -1,32 +1,32 @@
 #pragma once
 #include "HashTable.h"
 #include "Pair.h"
-#include <iostream>
 #include <string>
 #include <climits>
+#include <iostream>
+#include <fstream>
 /**
- * @brief SeparateChaining class
- * @param _table: array of buckets of pairs
- * @param _bucketSize: size of the bucket
+ * @brief OpenAddressing class
+ * @param _table: array of pairs
  * @param _capacity: capacity of the table
  * @param _size: max size of the table
  * @param _alfa: load factor
+ * @param emptyKey: empty key
 */
 template <typename K, typename V>
-class SeparateChaining : public HashTable<K, V>{
+class OpenAddressing : public HashTable<K, V>{
     private:
-        Pair<K, V> ** _table;
-        int _bucketSize = 50;
+        Pair<K, V> * _table;
         int _capacity;
-        int _size;
-        int _sizetemp;
+        int _size = 10;
         float _alfa;
+        K emptyKey = INT_MIN;
 /**
  * @brief Hash function
  * @param key: key to hash
  * @param i: index of the key
 */
-        int hash(K key);
+        int hash(K key, int i);
 /**
  * @brief Resize functions up
 */
@@ -35,194 +35,140 @@ class SeparateChaining : public HashTable<K, V>{
  * @brief Resize functions down
 */
         void resizeDown();
-/**
- * @brief Change the bucket so there are no interruptions
- * @param index: index of the bucket
-*/
-        void refactorBucket(int index);
     public:
 /**
  * @brief Constructors
 */
-        SeparateChaining();
+        OpenAddressing();
 /**
  * @brief Constructors
- * @param capacity: capacity of the table
+ * @param size: size of the table
 */
-        SeparateChaining(int size);
+        OpenAddressing(int size);
 /**
  * @brief Constructors
  * @param filename: name of the file
  * @param size: size of the table
 */
-        SeparateChaining(std::string filename, int size);
+        OpenAddressing(std::string filename, int size);
 /**
  * @brief Insert function
  * @param key: key to insert
  * @param value: value to insert
 */
-        void insert(K key, V value) override;
+        void insert(K key, V value);
 /**
  * @brief Remove function
  * @param key: key to remove
 */
-        void remove(K key) override;
+        void remove(K key);
 /**
  * @brief Find function
  * @param key: key to find
  * @return value of the key
 */
-        V find(K key) override;
+        V find(K key);
 /**
  * @brief Exists function
  * @param key: key to find
  * @return true if the key exists, false otherwise
 */
-        bool exists(K key) override;
+        bool exists(K key);
 /**
  * @brief Size function
  * @return capacity of the table
 */
-        int size() override;
+        int size();
 /**
  * @brief Empty function
  * @return true if the table is empty, false otherwise
 */
-        bool empty() override;
+        bool empty();
 /**
  * @brief print keys function
 */
-        void keys() override;
+        void keys();
 /**
  * @brief print values function
 */
-        void values() override;
+        void values();
 /**
  * @brief print function
 */
-        void print() override;
+        void print();
 /**
  * @brief Destructor
 */
-        ~SeparateChaining(){
-            for(int i = 0; i < _size; i++){
-                delete[] _table[i];
-            }
+        ~OpenAddressing(){
             delete[] _table;
         }
 };
+
 template <typename K, typename V>
-int SeparateChaining<K, V>::hash(K key){
-    return abs(key % _size); // Modulo Hashing
+int OpenAddressing<K, V>::hash(K key, int i){
+    int span = 3; // pause between the following keys
+    int h1 = abs(key*span % _size);
+    return (h1 + i) % _size; // Linear Probing
 }
 
 template <typename K, typename V>
-void SeparateChaining<K, V>::resizeUp(){
-    int new_size = _size * 2;
-    Pair<K, V> **new_table = new Pair<K, V>*[new_size];
-    for (int i = 0; i < new_size; i++) {
-        new_table[i] = new Pair<K, V>[_bucketSize];
-    }
-    for (int i = 0; i < _size; i++) {
-        for (int j = 0; j < _bucketSize; j++) {
-            if (_table[i][j]._key != INT_MIN) {
-                int new_index = hash(_table[i][j]._key);
-                int k = 0;
-                while (new_table[new_index][k]._key != INT_MIN && k < _bucketSize) {
-                    k++;
-                    if (k == _bucketSize) break;
+void OpenAddressing<K, V>::resizeUp(){
+    _alfa = static_cast<float>(_capacity) / static_cast<float>(_size);
+    if(_alfa > 0.80){
+        Pair<K, V> * temp = new Pair<K, V>[_size*2];
+        _size = _size*2;
+        for(int i = 0; i < _size/2; i++){
+            if(_table[i]._key != emptyKey){
+                int j = 0;
+                while(temp[hash(_table[i]._key, j)]._key != emptyKey){
+                    j++;
                 }
-                if (k < _bucketSize) {
-                    new_table[new_index][k] = _table[i][j];
-                }
+                temp[hash(_table[i]._key, j)] = _table[i];
             }
         }
+        delete[] _table;
+        _table = temp;
     }
-    for (int i = 0; i < _size; i++) {
-        delete[] _table[i];
-    }
-    delete[] _table;
-    _table = new_table;
-    _size = new_size;
 }
 
 template <typename K, typename V>
-void SeparateChaining<K, V>::resizeDown() {
-    int new_size = _size / 2;
-    Pair<K, V> ** new_table = new Pair<K, V>*[new_size];
-    for (int i = 0; i < new_size; i++) {
-        new_table[i] = new Pair<K, V>[_bucketSize];
-    }
-    for (int i = 0; i < _size; i++) {
-        for (int j = 0; j < _bucketSize; j++) {
-            if (_table[i][j]._key != INT_MIN) {
-                int new_index = hash(_table[i][j]._key) % new_size;
-                int k = 0;
-                while (new_table[new_index][k]._key != INT_MIN && k < _bucketSize) {
-                    k++;
-                    if (k == _bucketSize) break;
+void OpenAddressing<K, V>::resizeDown(){
+    _alfa = static_cast<float>(_capacity) / static_cast<float>(_size);
+    if(_alfa <=0.20){
+        _size = _size/2;
+        Pair<K, V> * temp = new Pair<K, V>[_size/2];
+        for(int i = 0; i < _size*2; i++){
+            if(_table[i]._key != emptyKey){
+                int j = 0;
+                while(temp[hash(_table[i]._key, j)]._key != emptyKey){
+                    j++;
                 }
-                if (k < _bucketSize) {
-                    new_table[new_index][k] = _table[i][j];
-                }
+                temp[hash(_table[i]._key, j)] = _table[i];
             }
         }
+        delete[] _table;
+        _table = temp;
     }
-    for (int i = 0; i < _size; i++) {
-        delete[] _table[i];
-    }
-    delete[] _table;
-    _table = new_table;
-    _size = new_size;
-}
-
-
-template <typename K, typename V>
-void SeparateChaining<K, V>::refactorBucket(int index){
-    Pair<K, V> * temp = new Pair<K, V>[_bucketSize];
-    int j=0;
-    for(int i = 0; i < _bucketSize; i++){
-        if(_table[index][i]._key != INT_MIN){
-            temp[j] = _table[index][i];
-            j++;
-        }
-        if(_table[index][i]._key == INT_MIN && _table[index][i+1]._key == INT_MIN){
-            break;
-        }
-    }
-    delete[] _table[index];
-    _table[index] = temp;
-
 }
 
 template <typename K, typename V>
-SeparateChaining<K, V>::SeparateChaining(){
+OpenAddressing<K, V>::OpenAddressing(){
+    _capacity = 0;
     _size = 10;
-    _table = new Pair<K, V>*[_size];
-    for(int i = 0; i < _size; i++){
-        _table[i] = new Pair<K, V>[_bucketSize];
-    }
-    _capacity = 0;
+    _table = new Pair<K, V>[_size];
 }
 
 template <typename K, typename V>
-SeparateChaining<K, V>::SeparateChaining(int size){
-    _size = size;
-    _table = new Pair<K, V>*[_size];
-    for(int i = 0; i < _size; i++){
-        _table[i] = new Pair<K, V>[_bucketSize];
-    }
+OpenAddressing<K, V>::OpenAddressing(int size){
     _capacity = 0;
-
+    _size = size;
+    _table = new Pair<K, V>[_size];
 }
 
 template <typename K, typename V>
-SeparateChaining<K, V>::SeparateChaining(std::string filename, int size){
+OpenAddressing<K,V>::OpenAddressing(std::string filename, int size)  {
     _size = size;
-    _table = new Pair<K, V>*[_size];
-    for(int i = 0; i < _size; i++){
-        _table[i] = new Pair<K, V>[_bucketSize];
-    }
+    _table = new Pair<K, V>[_size];
     _capacity = 0;
     std::ifstream file(filename);
     if (file.is_open()) {
@@ -238,118 +184,90 @@ SeparateChaining<K, V>::SeparateChaining(std::string filename, int size){
 }
 
 template <typename K, typename V>
-void SeparateChaining<K, V>::insert(K key, V value){
-    int index = hash(key);
+void OpenAddressing<K, V>::insert(K key, V value){
     int i = 0;
-    while (i < _bucketSize && _table[index][i]._key != INT_MIN && _table[index][i]._key != key) {
+    while(_table[hash(key, i)]._key != emptyKey && _table[hash(key, i)]._key != key){
         i++;
     }
-    if (i < _bucketSize) {
-        if (_table[index][i]._key != key) {
-            _table[index][i] = Pair<K, V>(key, value);
-            _capacity++;
-            _alfa = static_cast<float>(_capacity) / static_cast<float>(_size);
-            if(_alfa >= 3){
-                resizeUp();
-            }
-        }
-    } else {
+    if(_table[hash(key, i)]._key != key){
+        _table[hash(key, i)] = Pair<K, V>(key, value);
+        _capacity++;
         resizeUp();
     }
 }
 
 template <typename K, typename V>
-void SeparateChaining<K, V>::remove(K key) {
-    int index = hash(key);
-    bool found = false;
-    int i;
-    for (i = 0; i < _bucketSize; i++) {
-        if (_table[index][i]._key == key) {
-            found = true;
-            break;
-        }
-        if (_table[index][i]._key == INT_MIN) {
-            break;
-        }
+void OpenAddressing<K, V>::remove(K key){
+    int i = 0;
+    while(_table[hash(key, i)]._key != key && i < _size-hash(key, 0)){
+        i++;
     }
-    if (found) {
-        _table[index][i] = Pair<K, V>();
-        _capacity--;
-        refactorBucket(index);
-        if (_capacity > 0 && static_cast<float>(_capacity) / (_size) <= 1) {
-            resizeDown();
-        }
-    }
+    _table[hash(key, i)] = Pair<K, V>();
+    _capacity--;
+    resizeDown();
 }
 
 template <typename K, typename V>
-V SeparateChaining<K, V>::find(K key){
+V OpenAddressing<K, V>::find(K key){
     int i = 0;
-    while(_table[hash(key)][i]._key != key && i < _bucketSize){
+    while(_table[hash(key, i)]._key != key && i < _size-hash(key, 0)){
         i++;
     }
-    if(_table[hash(key)][i]._key == key){
-        return _table[hash(key)][i]._value;
+    if(_table[hash(key, i)]._key == key){
+        return _table[hash(key, i)]._value;
     }else{
         return INT_MIN;
     }
 }
 
 template <typename K, typename V>
-bool SeparateChaining<K, V>::exists(K key){
+bool OpenAddressing<K, V>::exists(K key){
     int i = 0;
-    while(_table[hash(key)][i]._key != key && i < _bucketSize){
+    while(_table[hash(key, i)]._key != key && i < _size){
         i++;
     }
-    if(_table[hash(key)][i]._key == key){
+    if(_table[hash(key, i)]._key == key){
         return true;
-    }else{
-        return false;
     }
+    return false;
 }
 
 template <typename K, typename V>
-int SeparateChaining<K, V>::size(){
-    return _capacity;
+int OpenAddressing<K, V>::size(){
+    return _size;
 }
 
 template <typename K, typename V>
-bool SeparateChaining<K, V>::empty(){
-    return _capacity == 0;
+bool OpenAddressing<K, V>::empty(){
+    if(_capacity == 0){
+        return true;
+    }
+    return false;
 }
 
 template <typename K, typename V>
-void SeparateChaining<K, V>::keys(){
+void OpenAddressing<K, V>::keys(){
     for(int i = 0; i < _size; i++){
-        for(int j = 0; j < _bucketSize; j++){
-            if(_table[i][j]._key != INT_MIN){
-                std::cout << _table[i][j]._key << std::endl;
-            }
+        if(_table[i]._key != emptyKey){
+            std::cout << _table[i]._key << std::endl;
         }
     }
-    std::cout << std::endl;
 }
 
 template <typename K, typename V>
-void SeparateChaining<K, V>::values(){
+void OpenAddressing<K, V>::values(){
     for(int i = 0; i < _size; i++){
-        for(int j = 0; j < _bucketSize; j++){
-            if(_table[i][j]._key != INT_MIN){
-                std::cout << _table[i][j]._value << std::endl;
-            }
+        if(_table[i]._key != emptyKey){
+            std::cout << _table[i]._value << std::endl;
         }
     }
-    std::cout << std::endl;
 }
 
 template <typename K, typename V>
-void SeparateChaining<K, V>::print(){
+void OpenAddressing<K, V>::print(){
     for(int i = 0; i < _size; i++){
-        for(int j = 0; j < _bucketSize; j++){
-            if(_table[i][j]._key != INT_MIN){
-                std::cout << _table[i][j]._key << "->" << _table[i][j]._value << std::endl;
-            }
+        if(_table[i]._key != emptyKey){
+            std::cout << _table[i]._key << "->" << _table[i]._value << std::endl;
         }
     }
-    std::cout << std::endl;
 }

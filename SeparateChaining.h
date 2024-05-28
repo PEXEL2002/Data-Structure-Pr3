@@ -273,16 +273,14 @@ void SeparateChaining<K, V>::remove(K key) {
         }
     }
     if (found) {
-        for (int j = i; j < _bucketSize - 1; j++) {
-            _table[index][j] = _table[index][j + 1];
-        }
-        _table[index][_bucketSize - 1] = Pair<K, V>();
-
+        _table[index][i] = Pair<K, V>();
         _capacity--;
-        resizeDown();
+        refactorBucket(index);
+        if (_capacity > 0 && static_cast<float>(_capacity) / (_size) <= 1) {
+            resizeDown();
+        }
     }
 }
-
 
 template <typename K, typename V>
 V SeparateChaining<K, V>::find(K key){
