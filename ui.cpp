@@ -7,7 +7,7 @@
 #include <random>
 #include "SeparateChaining.h"
 #include "OpenAddressing.h"
-//#include "Cuckoo.h"
+#include "CuckooHashing.h"
 
 void generateFileData(int n, std::string filename){
     std::ofstream file;
@@ -29,9 +29,10 @@ void tests(){
     int sizes[8] = {1000, 2000, 4000, 8000, 16000, 32000, 64000, 128000};
     //int sizes[4] = {1000, 2000, 4000, 8000};
     int sets = 1;
-    int iterations = 100;
+    int iterations = 1;
     OpenAddressing<int, int> * openAddressing;
     SeparateChaining<int, int> * separateChaining;
+    Cuckoo<int, int> * coocko;
     std::string filename = "test_";
     std::fstream file("wyniki.csv", std::ios::out);
     if(!file.is_open()){
@@ -116,7 +117,42 @@ void tests(){
             file << "SeparateChaining; " << size << "; Find; " << time/iterations << "\n";
             std::cout << "SeparateChaining; " << size << "; Find; " << time/iterations << "\n";
             time = 0;
-            
+            //Cuckoo
+            for(int i = 0; i < iterations; i++){
+                coocko = new Cuckoo<int, int>(filename + ".txt", size);
+                auto start = std::chrono::high_resolution_clock::now();
+                coocko->insert(generateNumber(0, INT_MAX), generateNumber(0, INT_MAX));
+                auto end = std::chrono::high_resolution_clock::now();
+                time += std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+                delete coocko;
+            }
+            file << "Cuckoo; " << size << "; Find; " << time/iterations << "\n";
+            std::cout << "Cuckoo; " << size << "; Find; " << time/iterations << "\n";
+            time = 0;
+
+            for(int i = 0; i < iterations; i++){
+                coocko = new Cuckoo<int, int>(filename + ".txt", size);
+                auto start = std::chrono::high_resolution_clock::now();
+                coocko->remove(generateNumber(0, size));
+                auto end = std::chrono::high_resolution_clock::now();
+                time += std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+                delete coocko;
+            }
+            file << "Cuckoo; " << size << "; Remove; " << time/iterations << "\n";
+            std::cout << "Cuckoo; " << size << "; Remove; " << time/iterations << "\n";
+            time = 0;
+
+            for(int i = 0; i < iterations; i++){
+                coocko = new Cuckoo<int, int>(filename + ".txt", size);
+                auto start = std::chrono::high_resolution_clock::now();
+                coocko->find(generateNumber(0, size));
+                auto end = std::chrono::high_resolution_clock::now();
+                time += std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+                delete coocko;
+            }
+            file << "Cuckoo; " << size << "; Find; " << time/iterations << "\n";
+            std::cout << "Cuckoo; " << size << "; Find; " << time/iterations << "\n";
+            time = 0;
         }
     }
     file.close();
