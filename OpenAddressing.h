@@ -167,8 +167,8 @@ OpenAddressing<K, V>::OpenAddressing(int size){
 
 template <typename K, typename V>
 OpenAddressing<K,V>::OpenAddressing(std::string filename, int size)  {
-    _size = size;
-    _table = new Pair<K, V>[_size];
+    _size = size*2;
+    _table = new Pair<K, V>[_size*2];
     _capacity = 0;
     std::ifstream file(filename);
     if (file.is_open()) {

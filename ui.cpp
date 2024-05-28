@@ -39,7 +39,7 @@ void tests(){
         return;
     }
     long long int time; 
-    file << "NameOfTableAndType;Size;Operation;Time";
+    file << "NameOfTableAndType;Size;Operation;Time\n";
     for(int s = 0; s < sets; s++){
         time = 0;
         for(auto& size: sizes){
@@ -48,7 +48,7 @@ void tests(){
             generateFileData(size, filename);
             // OpenAddressing linear
             for(int i = 0; i < iterations; i++){
-                openAddressing = new OpenAddressing<int, int>(filename + ".txt", size*2);
+                openAddressing = new OpenAddressing<int, int>(filename + ".txt", size);
                 auto start = std::chrono::high_resolution_clock::now();
                 openAddressing->insert(generateNumber(0, INT_MAX), generateNumber(0, INT_MAX));
                 auto end = std::chrono::high_resolution_clock::now();
@@ -60,7 +60,7 @@ void tests(){
             time = 0;
             
             for(int i = 0; i < iterations; i++){
-                openAddressing = new OpenAddressing<int, int>(filename + ".txt", size*2);
+                openAddressing = new OpenAddressing<int, int>(filename + ".txt", size);
                 auto start = std::chrono::high_resolution_clock::now();
                 openAddressing->remove(generateNumber(0, size));
                 auto end = std::chrono::high_resolution_clock::now();
@@ -71,7 +71,7 @@ void tests(){
             std::cout << "OpenAddressing; " << size << "; Remove; " << time/iterations << "\n";
             time = 0;
             for(int i = 0; i < iterations; i++){
-                openAddressing = new OpenAddressing<int, int>(filename + ".txt", size*2);
+                openAddressing = new OpenAddressing<int, int>(filename + ".txt", size);
                 auto start = std::chrono::high_resolution_clock::now();
                 openAddressing->find(generateNumber(0, size));
                 auto end = std::chrono::high_resolution_clock::now();
@@ -84,7 +84,7 @@ void tests(){
 
             //SeparateChaining modulo
             for(int i = 0; i < iterations; i++){
-                separateChaining = new SeparateChaining<int, int>(filename + ".txt", size*2);
+                separateChaining = new SeparateChaining<int, int>(filename + ".txt", size);
                 auto start = std::chrono::high_resolution_clock::now();
                 separateChaining->insert(generateNumber(0, INT_MAX), generateNumber(0, INT_MAX));
                 auto end = std::chrono::high_resolution_clock::now();
@@ -95,7 +95,7 @@ void tests(){
             std::cout << "SeparateChaining; " << size << "; Insert; " << time/iterations << "\n";
             time = 0;
             for(int i = 0; i < iterations; i++){
-                separateChaining = new SeparateChaining<int, int>(filename + ".txt", size*2);
+                separateChaining = new SeparateChaining<int, int>(filename + ".txt", size);
                 auto start = std::chrono::high_resolution_clock::now();
                 separateChaining->remove(generateNumber(0, size));
                 auto end = std::chrono::high_resolution_clock::now();
@@ -106,7 +106,7 @@ void tests(){
             std::cout << "SeparateChaining; " << size << "; Remove; " << time/iterations << "\n";
             time = 0;
             for(int i = 0; i < iterations; i++){
-                separateChaining = new SeparateChaining<int, int>(filename + ".txt", size*2);
+                separateChaining = new SeparateChaining<int, int>(filename + ".txt", size);
                 auto start = std::chrono::high_resolution_clock::now();
                 separateChaining->find(generateNumber(0, size));
                 auto end = std::chrono::high_resolution_clock::now();
@@ -121,6 +121,7 @@ void tests(){
     }
     file.close();
 }
+
 
 void uiInsert(HashTable<int, int> ** table, std::string* haschName){
     long long int time[3];
