@@ -123,9 +123,12 @@ void Cuckoo<K, V>::resizeUp(){
     int new_size = _size * 2;
     Pair<K, V> * old_table1 = _table1;
     Pair<K, V> * old_table2 = _table2;
-    _table1 = new Pair<K, V>[new_size/2];
-    _table2 = new Pair<K, V>[new_size/2];
-    for(int i = 0; i < _size/2; i++){
+    _table1 = new Pair<K, V>[new_size / 2](); // Initialize new array
+    _table2 = new Pair<K, V>[new_size / 2](); // Initialize new array
+    int old_size = _size;
+    _size = new_size;
+
+    for(int i = 0; i < old_size / 2; i++){
         if(old_table1[i]._key != emptyKey){
             insert(old_table1[i]._key, old_table1[i]._value);
         }
@@ -135,7 +138,6 @@ void Cuckoo<K, V>::resizeUp(){
     }
     delete[] old_table1;
     delete[] old_table2;
-    _size = new_size;
 }
 
 template <typename K, typename V>
@@ -195,21 +197,29 @@ Cuckoo<K, V>::Cuckoo(std::string filename, int size){
 
 template <typename K, typename V>
 void Cuckoo<K, V>::insert(K key, V value) {
-    if (_capacity >= 0.5 * _size) {
-        resizeUp();
-    }
     Pair<K, V> entry(key, value);
     int pos1, pos2, limit = 64;
 
     for (int i = 0; i < limit; ++i) {
         pos1 = hash1(entry._key);
         std::swap(entry, _table1[pos1]);
-        if (entry._key == emptyKey) return;
+        if (entry._key == emptyKey){
+            _capacity++;
+            _alfa = static_cast<float>(_capacity) / static_cast<float>(_size);
+            if(_alfa > 0.75) resizeUp();
+            return;
+        } 
 
         pos2 = hash2(entry._key);
         std::swap(entry, _table2[pos2]);
-        if (entry._key == emptyKey) return; 
+        if (entry._key == emptyKey) {
+            _capacity++;
+            _alfa = static_cast<float>(_capacity) / static_cast<float>(_size);
+            if(_alfa > 0.75) resizeUp();
+            return;
+        } 
     }
+    std::cout << "Rehashing is needed" << std::endl;
     // if limit is reached, resize the table
     resizeUp();
     insert(entry._key, entry._value);

@@ -28,8 +28,8 @@ int generateNumber(int min, int max){
 void tests(){
     int sizes[8] = {1000, 2000, 4000, 8000, 16000, 32000, 64000, 128000};
     //int sizes[4] = {1000, 2000, 4000, 8000};
-    int sets = 100;
-    int iterations = 1;
+    int sets = 1;
+    int iterations = 100;
     OpenAddressing<int, int> * openAddressing;
     SeparateChaining<int, int> * separateChaining;
     Cuckoo<int, int> * coocko;
@@ -48,7 +48,6 @@ void tests(){
             filename = "test_";
             filename = filename + std::to_string(size)+"_"+std::to_string(s);
             generateFileData(size, filename);
-            /**
             // OpenAddressing linear
             for(int i = 0; i < iterations; i++){
                 openAddressing = new OpenAddressing<int, int>(filename + ".txt", size);
@@ -119,7 +118,6 @@ void tests(){
             file << "SeparateChaining; " << size << "; Find; " << time/iterations << "\n";
             std::cout << "SeparateChaining; " << size << "; Find; " << time/iterations << "\n";
             time = 0;
-            */
             //Cuckoo
             for(int i = 0; i < iterations; i++){
                 coocko = new Cuckoo<int, int>(filename + ".txt", size);
@@ -132,7 +130,6 @@ void tests(){
             file << "Cuckoo; " << size << "; insert; " << time/iterations << "\n";
             std::cout << "Cuckoo; " << size << "; insert; " << time/iterations << "\n";
             time = 0;
-            /**
             for(int i = 0; i < iterations; i++){
                 coocko = new Cuckoo<int, int>(filename + ".txt", size);
                 auto start = std::chrono::high_resolution_clock::now();
@@ -156,7 +153,6 @@ void tests(){
             file << "Cuckoo; " << size << "; Find; " << time/iterations << "\n";
             std::cout << "Cuckoo; " << size << "; Find; " << time/iterations << "\n";
             time = 0;
-            */
         }
     }
     file.close();
