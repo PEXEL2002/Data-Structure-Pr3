@@ -120,48 +120,41 @@ int Cuckoo<K, V>::hash2(K key){
 
 template <typename K, typename V>
 void Cuckoo<K, V>::resizeUp(){
-    std::cout << "Resize table";
     int new_size = _size * 2;
-    Pair<K, V> * new_table1 = new Pair<K, V>[new_size/2];
-    Pair<K, V> * new_table2 = new Pair<K, V>[new_size/2];
-    int index;
+    Pair<K, V> * old_table1 = _table1;
+    Pair<K, V> * old_table2 = _table2;
+    _table1 = new Pair<K, V>[new_size/2];
+    _table2 = new Pair<K, V>[new_size/2];
     for(int i = 0; i < _size/2; i++){
-        if(_table1[i]._key != emptyKey){
-            index = hash1(_table1[i]._key);
-            new_table1[index] = _table1[i];
+        if(old_table1[i]._key != emptyKey){
+            insert(old_table1[i]._key, old_table1[i]._value);
         }
-        if(_table2[i]._key != emptyKey){
-            index = hash2(_table2[i]._key);
-            new_table2[index] = _table2[i];
+        if(old_table2[i]._key != emptyKey){
+            insert(old_table2[i]._key, old_table2[i]._value);
         }
     }
-    delete[] _table1;
-    delete[] _table2;
-    _table1 = new_table1;
-    _table2 = new_table2;
+    delete[] old_table1;
+    delete[] old_table2;
     _size = new_size;
 }
 
 template <typename K, typename V>
 void Cuckoo<K, V>::resizeDown(){
     int new_size = _size / 2;
-    Pair<K, V> * new_table1 = new Pair<K, V>[new_size/2];
-    Pair<K, V> * new_table2 = new Pair<K, V>[new_size/2];
-    int index;
+    Pair<K, V> * old_table1 = _table1;
+    Pair<K, V> * old_table2 = _table2;
+    _table1 = new Pair<K, V>[new_size/2];
+    _table2 = new Pair<K, V>[new_size/2];
     for(int i = 0; i < _size/2; i++){
-        if(_table1[i]._key != emptyKey){
-            index = hash1(_table1[i]._key);
-            new_table1[index] = _table1[i];
+        if(old_table1[i]._key != emptyKey){
+            insert(old_table1[i]._key, old_table1[i]._value);
         }
-        if(_table2[i]._key != emptyKey){
-            index = hash2(_table2[i]._key);
-            new_table2[index] = _table2[i];
+        if(old_table2[i]._key != emptyKey){
+            insert(old_table2[i]._key, old_table2[i]._value);
         }
     }
-    delete[] _table1;
-    delete[] _table2;
-    _table1 = new_table1;
-    _table2 = new_table2;
+    delete[] old_table1;
+    delete[] old_table2;
     _size = new_size;
 }
 
@@ -184,7 +177,7 @@ Cuckoo<K, V>::Cuckoo(int size){
 
 template <typename K, typename V>
 Cuckoo<K, V>::Cuckoo(std::string filename, int size){
-    int optimal_size = size/0.45;
+    int optimal_size = size/0.4;
     if(optimal_size%2 == 1) optimal_size++;
     _size = optimal_size;
     _table1 = new Pair<K, V>[_size/2];
@@ -202,33 +195,24 @@ Cuckoo<K, V>::Cuckoo(std::string filename, int size){
 
 template <typename K, typename V>
 void Cuckoo<K, V>::insert(K key, V value) {
-    int limit = 64; // limit for the number of attempts to insert a key
-    int index1, index2;
-    for (int attempt = 0; attempt < limit; ++attempt) {
-        int index1 = hash1(key);
-        if (_table1[index1]._key == INT_MIN) {
-            _table1[index1] = Pair<K, V>(key, value);
-            _capacity++;
-            _alfa = static_cast<float>(_capacity) / static_cast<float>(_size);
-            if(_alfa > 0.75) resizeUp();
-            return;
-        }
-        std::swap(_table1[index1]._key, key);
-        std::swap(_table1[index1]._value, value);
-        int index2 = hash2(key);
-        if (_table2[index2]._key == INT_MIN) {
-            _table2[index2] = Pair<K, V>(key, value);
-            _capacity++;
-            _alfa = static_cast<float>(_capacity) / static_cast<float>(_size);
-            if(_alfa > 0.75) resizeUp();
-            return;
-        }
-        std::swap(_table2[index2]._key, key);
-        std::swap(_table2[index2]._value, value);
+    if (_capacity >= 0.5 * _size) {
+        resizeUp();
     }
-    // if we are here, then we have a cycle
+    Pair<K, V> entry(key, value);
+    int pos1, pos2, limit = 64;
+
+    for (int i = 0; i < limit; ++i) {
+        pos1 = hash1(entry._key);
+        std::swap(entry, _table1[pos1]);
+        if (entry._key == emptyKey) return;
+
+        pos2 = hash2(entry._key);
+        std::swap(entry, _table2[pos2]);
+        if (entry._key == emptyKey) return; 
+    }
+    // if limit is reached, resize the table
     resizeUp();
-    insert(key, value); // try again to insert the key
+    insert(entry._key, entry._value);
 }
 
 template <typename K, typename V>
