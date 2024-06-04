@@ -26,8 +26,8 @@ int generateNumber(int min, int max){
 }
 
 void tests(){
-    int sizes[8] = {1000, 2000, 4000, 8000, 16000, 32000, 64000, 128000};
-    //int sizes[4] = {1000, 2000, 4000, 8000};
+    //int sizes[8] = {1000, 2000, 4000, 8000, 16000, 32000, 64000, 128000};
+    int sizes[4] = {1000, 2000, 4000, 8000};
     int sets = 1;
     int iterations = 100;
     OpenAddressing<int, int> * openAddressing;
@@ -36,7 +36,7 @@ void tests(){
     std::string filename = "test_";
     std::fstream file("wyniki.csv", std::ios::out);
     if(!file.is_open()){
-        std::cout << "Nie udało się otworzyć pliku wyniki.txt" << std::endl;
+        std::cout << "Nie udało się otworzyć pliku wyniki.csv" << std::endl;
         return;
     }
     long long int time; 
@@ -72,17 +72,6 @@ void tests(){
             file << "OpenAddressing; " << size << "; Remove; " << time/iterations << "\n";
             std::cout << "OpenAddressing; " << size << "; Remove; " << time/iterations << "\n";
             time = 0;
-            for(int i = 0; i < iterations; i++){
-                openAddressing = new OpenAddressing<int, int>(filename + ".txt", size);
-                auto start = std::chrono::high_resolution_clock::now();
-                openAddressing->find(generateNumber(0, size));
-                auto end = std::chrono::high_resolution_clock::now();
-                time += std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-                delete openAddressing;
-            }
-            file << "OpenAddressing; " << size << "; Find; " << time/iterations << "\n";
-            std::cout << "OpenAddressing; " << size << "; Find; " << time/iterations << "\n";
-            time = 0;
 
             //SeparateChaining modulo
             for(int i = 0; i < iterations; i++){
@@ -106,18 +95,6 @@ void tests(){
             }
             file << "SeparateChaining; " << size << "; Remove; " << time/iterations << "\n";
             std::cout << "SeparateChaining; " << size << "; Remove; " << time/iterations << "\n";
-            time = 0;
-            for(int i = 0; i < iterations; i++){
-                separateChaining = new SeparateChaining<int, int>(filename + ".txt", size);
-                auto start = std::chrono::high_resolution_clock::now();
-                separateChaining->find(generateNumber(0, size));
-                auto end = std::chrono::high_resolution_clock::now();
-                time += std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-                delete separateChaining;
-            }
-            file << "SeparateChaining; " << size << "; Find; " << time/iterations << "\n";
-            std::cout << "SeparateChaining; " << size << "; Find; " << time/iterations << "\n";
-            time = 0;
             //Cuckoo
             for(int i = 0; i < iterations; i++){
                 coocko = new Cuckoo<int, int>(filename + ".txt", size);
@@ -141,18 +118,6 @@ void tests(){
             file << "Cuckoo; " << size << "; Remove; " << time/iterations << "\n";
             std::cout << "Cuckoo; " << size << "; Remove; " << time/iterations << "\n";
             time = 0;
-
-            for(int i = 0; i < iterations; i++){
-                coocko = new Cuckoo<int, int>(filename + ".txt", size);
-                auto start = std::chrono::high_resolution_clock::now();
-                coocko->find(generateNumber(0, size));
-                auto end = std::chrono::high_resolution_clock::now();
-                time += std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-                delete coocko;
-            }
-            file << "Cuckoo; " << size << "; Find; " << time/iterations << "\n";
-            std::cout << "Cuckoo; " << size << "; Find; " << time/iterations << "\n";
-            time = 0;
         }
     }
     file.close();
@@ -166,14 +131,14 @@ void uiInsert(HashTable<int, int> ** table, std::string* haschName){
     std::cin >> key;
     std::cout << "Podaj wartosc: ";
     std::cin >> value;
-    for(int i = 0; i < 2; i++){
+    for(int i = 0; i < 3; i++){
         auto start = std::chrono::high_resolution_clock::now();
         table[i]->insert(key, value);
         auto end = std::chrono::high_resolution_clock::now();
         time[i] = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
     }
     std::cout << "Wstawiono element o kluczu:" << key << " i wartości: " << value << std::endl;
-    for(int i = 0; i < 2; i++){
+    for(int i = 0; i < 3; i++){
         std::cout << haschName[i] << "Czas: " << time[i] << std::endl;
     }
 }
@@ -183,14 +148,14 @@ void uiRemove(HashTable<int, int> ** table, std::string* haschName){
     int key;
     std::cout << "Podaj klucz: ";
     std::cin >> key;
-    for(int i = 0; i < 2; i++){
+    for(int i = 0; i < 3; i++){
         auto start = std::chrono::high_resolution_clock::now();
         table[i]->remove(key);
         auto end = std::chrono::high_resolution_clock::now();
         time[i] = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
     }
     std::cout << "Usunieto element o kluczu:" << key << std::endl;
-    for(int i = 0; i < 2; i++){
+    for(int i = 0; i < 3; i++){
         std::cout << haschName[i] << "Czas: " << time[i] << std::endl;
     }
 }
@@ -201,7 +166,7 @@ void uiFind(HashTable<int, int> ** table, std::string* haschName){
     std::cout << "Podaj klucz: ";
     std::cin >> key;
     int value;
-    for(int i = 0; i < 2; i++){
+    for(int i = 0; i < 3; i++){
         auto start = std::chrono::high_resolution_clock::now();
         value = table[i]->find(key);
         auto end = std::chrono::high_resolution_clock::now();
@@ -209,7 +174,7 @@ void uiFind(HashTable<int, int> ** table, std::string* haschName){
     }
     std::cout << "Znaleziono element o kluczu:" << key << std::endl;
     std::cout << "Wartość: " << value << std::endl;
-    for(int i = 0; i < 2; i++){
+    for(int i = 0; i < 3; i++){
         std::cout << haschName[i] << "Czas: " << time[i] << std::endl;
     }
 }
