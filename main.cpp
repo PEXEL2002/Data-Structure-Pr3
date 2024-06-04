@@ -1,6 +1,7 @@
 #include "HashTable.h"
 #include "OpenAddressing.h"
 #include "SeparateChaining.h"
+#include "CuckooHashing.h"
 #include "ui.h"
 #include <string>
 #include <climits>
@@ -28,7 +29,7 @@ int main(){
             HashTable<int, int> ** tables = new HashTable<int, int>*[3];
             tables[0] = new OpenAddressing<int, int>("prezentacja.txt",size);
             tables[1] = new SeparateChaining<int, int>("prezentacja.txt",size);
-            //tables[2] = new Cuckoo<int, int>("prezentacja.txt",size);
+            tables[2] = new Cuckoo<int, int>("prezentacja.txt",size);
             int oper = 1;
             int oparation = 0;
             while(oper){
