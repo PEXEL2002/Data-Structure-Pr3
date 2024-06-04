@@ -110,12 +110,12 @@ class Cuckoo : public HashTable<K, V>{
 
 template <typename K, typename V>
 int Cuckoo<K, V>::hash1(K key){
-    return key%(_size/2);
+    return key%(_size/2); // Division method
 }
 
 template <typename K, typename V>
 int Cuckoo<K, V>::hash2(K key){
-    return (key * 31 + 1) % (_size / 2);
+    return (key * 31 + 1) % (_size / 2); // Multiplication method
 }
 
 template <typename K, typename V>
@@ -123,8 +123,8 @@ void Cuckoo<K, V>::resizeUp(){
     int new_size = _size * 2;
     Pair<K, V> * old_table1 = _table1;
     Pair<K, V> * old_table2 = _table2;
-    _table1 = new Pair<K, V>[new_size / 2](); // Initialize new array
-    _table2 = new Pair<K, V>[new_size / 2](); // Initialize new array
+    _table1 = new Pair<K, V>[new_size / 2]();
+    _table2 = new Pair<K, V>[new_size / 2]();
     int old_size = _size;
     _size = new_size;
 
