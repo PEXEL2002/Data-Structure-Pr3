@@ -26,8 +26,8 @@ int generateNumber(int min, int max){
 }
 
 void tests(){
-    //int sizes[8] = {1000, 2000, 4000, 8000, 16000, 32000, 64000, 128000};
-    int sizes[4] = {1000, 2000, 4000, 8000};
+    int sizes[8] = {1000, 2000, 4000, 8000, 16000, 32000, 64000, 128000};
+    //int sizes[4] = {1000, 2000, 4000, 8000};
     int sets = 1;
     int iterations = 100;
     OpenAddressing<int, int> * openAddressing;
@@ -85,6 +85,7 @@ void tests(){
             file << "SeparateChaining; " << size << "; Insert; " << time/iterations << "\n";
             std::cout << "SeparateChaining; " << size << "; Insert; " << time/iterations << "\n";
             time = 0;
+
             for(int i = 0; i < iterations; i++){
                 separateChaining = new SeparateChaining<int, int>(filename + ".txt", size);
                 auto start = std::chrono::high_resolution_clock::now();
@@ -95,6 +96,7 @@ void tests(){
             }
             file << "SeparateChaining; " << size << "; Remove; " << time/iterations << "\n";
             std::cout << "SeparateChaining; " << size << "; Remove; " << time/iterations << "\n";
+            time = 0;
             //Cuckoo
             for(int i = 0; i < iterations; i++){
                 coocko = new Cuckoo<int, int>(filename + ".txt", size);
