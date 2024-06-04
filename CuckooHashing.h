@@ -198,7 +198,7 @@ Cuckoo<K, V>::Cuckoo(std::string filename, int size){
 template <typename K, typename V>
 void Cuckoo<K, V>::insert(K key, V value) {
     Pair<K, V> entry(key, value);
-    int pos1, pos2, limit = 64;
+    int pos1, pos2, limit = 32;
 
     for (int i = 0; i < limit; ++i) {
         pos1 = hash1(entry._key);

@@ -86,19 +86,25 @@ void DoublyLinkedList<K,V>::insert(K key, V value){
 }
 
 template <typename K, typename V>
-void DoublyLinkedList<K,V>::remove(K key){
+void DoublyLinkedList<K, V>::remove(K key) {
     Node<K, V>* temp = head;
-    while(temp != nullptr){
-        if(temp->_pair._key == key){
-            if(temp == head){
+    while (temp != nullptr) {
+        if (temp->_pair._key == key) {
+            if (temp == head) {
                 head = temp->next;
-                if(head != nullptr){
+                if (head != nullptr) {
                     head->prev = nullptr;
+                } else {
+                    tail = nullptr;
                 }
-            }else if(temp == tail){
+            } else if (temp == tail) {
                 tail = temp->prev;
-                tail->next = nullptr;
-            }else{
+                if (tail != nullptr) {
+                    tail->next = nullptr;
+                } else {
+                    head = nullptr;
+                }
+            } else {
                 temp->prev->next = temp->next;
                 temp->next->prev = temp->prev;
             }

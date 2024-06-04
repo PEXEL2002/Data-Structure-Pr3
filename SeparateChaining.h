@@ -5,13 +5,19 @@
 #include <climits>
 #include <string>
 #include <fstream>
-
+/**
+ * @brief SeparateChaining class
+ * @param table: array of doubly linked lists
+ * @param _size: size of the table  
+ * @param _capacity: capacity of the table
+ * @param _alfa: load factor
+*/
 template <typename K, typename V>
 class SeparateChaining: public HashTable<K, V>{
     DoublyLinkedList<K, V>* table;
     int _size;
     int _capacity;
-    int _alfa;
+    float _alfa;
 /**
  * @brief Hash function
  * @param key: key to hash
@@ -184,12 +190,9 @@ void SeparateChaining<K, V>::insert(K key, V value){
 template <typename K, typename V>
 void SeparateChaining<K, V>::remove(K key){
     int index = hash(key);
-    Node<K, V>* node = table[index].exist(key);
-    if(node != nullptr){
-        table[index].remove(key);
-        _capacity--;
-        resizeDown();
-    }
+    table[index].remove(key);
+    _capacity--;
+    resizeDown();
 }
 
 template <typename K, typename V>
