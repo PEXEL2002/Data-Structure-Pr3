@@ -20,7 +20,7 @@ template <typename K, typename V>
 class Cuckoo : public HashTable<K, V>{
     private:
         Pair<K, V> * _table1, * _table2;
-        int _capacity;
+        int _capacity = 0;
         int _size = 10;
         float _alfa;
         K emptyKey = INT_MIN;
@@ -127,7 +127,7 @@ void Cuckoo<K, V>::resizeUp(){
     _table2 = new Pair<K, V>[new_size / 2]();
     int old_size = _size;
     _size = new_size;
-
+    _capacity = 0;
     for(int i = 0; i < old_size / 2; i++){
         if(old_table1[i]._key != emptyKey){
             insert(old_table1[i]._key, old_table1[i]._value);
@@ -208,8 +208,11 @@ void Cuckoo<K, V>::insert(K key, V value) {
             _alfa = static_cast<float>(_capacity) / static_cast<float>(_size);
             if(_alfa > 0.75) resizeUp();
             return;
-        } 
-
+        }
+        if(_table1[pos1]._key == entry._key){
+            _table1[pos1]._value = entry._value;
+            return;
+        }
         pos2 = hash2(entry._key);
         std::swap(entry, _table2[pos2]);
         if (entry._key == emptyKey) {
@@ -218,6 +221,10 @@ void Cuckoo<K, V>::insert(K key, V value) {
             if(_alfa > 0.75) resizeUp();
             return;
         } 
+        if(_table2[pos2]._key == entry._key){
+            _table2[pos2]._value = entry._value;
+            return;
+        }
     }
     std::cout << "Rehashing is needed" << std::endl;
     // if limit is reached, resize the table
@@ -229,6 +236,7 @@ template <typename K, typename V>
 void Cuckoo<K, V>::remove(K key){
     int index1 = hash1(key);
     int index2 = hash2(key);
+    //std::cout << _capacity << " " << _size << std::endl;
     if(_table1[index1]._key == key){
         _table1[index1] = Pair<K, V>();
         _capacity--;
@@ -239,6 +247,7 @@ void Cuckoo<K, V>::remove(K key){
         }
     }
     _alfa = static_cast<float>(_capacity) / static_cast<float>(_size);
+    //std::cout << _capacity << " " << _size << std::endl;
     if(_alfa <= 0.20) resizeDown();
 }
 
