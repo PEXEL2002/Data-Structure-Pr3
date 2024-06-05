@@ -236,7 +236,6 @@ template <typename K, typename V>
 void Cuckoo<K, V>::remove(K key){
     int index1 = hash1(key);
     int index2 = hash2(key);
-    //std::cout << _capacity << " " << _size << std::endl;
     if(_table1[index1]._key == key){
         _table1[index1] = Pair<K, V>();
         _capacity--;
@@ -247,7 +246,6 @@ void Cuckoo<K, V>::remove(K key){
         }
     }
     _alfa = static_cast<float>(_capacity) / static_cast<float>(_size);
-    //std::cout << _capacity << " " << _size << std::endl;
     if(_alfa <= 0.20) resizeDown();
 }
 
@@ -289,10 +287,10 @@ template <typename K, typename V>
 void Cuckoo<K, V>::keys(){
     for(int i = 0; i < _size/2; i++){
         if(_table1[i]._key != emptyKey){
-            std::cout << _table1[i]._key << " ";
+            std::cout << _table1[i]._key << std::endl;
         }
         if(_table2[i]._key != emptyKey){
-            std::cout << _table2[i]._key << " ";
+            std::cout << _table2[i]._key << std::endl;
         }
     }
     std::cout << std::endl;
@@ -302,10 +300,10 @@ template <typename K, typename V>
 void Cuckoo<K, V>::values(){
     for(int i = 0; i < _size/2; i++){
         if(_table1[i]._key != emptyKey){
-            std::cout << _table1[i]._value << " ";
+            std::cout << _table1[i]._value << std::endl;
         }
         if(_table2[i]._key != emptyKey){
-            std::cout << _table2[i]._value << " ";
+            std::cout << _table2[i]._value << std::endl;
         }
     }
     std::cout << std::endl;

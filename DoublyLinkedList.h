@@ -113,7 +113,7 @@ template <typename K, typename V>
 void DoublyLinkedList<K, V>::printKeys() const {
     Node<K, V>* temp = head;
     while (temp != nullptr) {
-        std::cout << temp->_pair._key << " ";
+        std::cout << temp->_pair._key << std::endl;
         temp = temp->next;
     }
     std::cout << std::endl;
@@ -123,7 +123,7 @@ template <typename K, typename V>
 void DoublyLinkedList<K, V>::printValues() const {
     Node<K, V>* temp = head;
     while (temp != nullptr) {
-        std::cout << temp->_pair._value << " ";
+        std::cout << temp->_pair._value << std::endl;
         temp = temp->next;
     }
     std::cout << std::endl;

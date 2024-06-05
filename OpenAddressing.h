@@ -229,7 +229,7 @@ void OpenAddressing<K, V>::remove(K key) {
         hashIndex = hash(key, i);
     }
     if (_table[hashIndex]._key == key) {
-        _table[hashIndex] = Pair<K, V>(emptyKey, V());
+        _table[hashIndex] = Pair<K, V>();
         _capacity--;
         resizeDown();
     }
@@ -246,7 +246,7 @@ V OpenAddressing<K, V>::find(K key) {
     if (_table[hashIndex]._key == key) {
         return _table[hashIndex]._value;
     } else {
-        return INT_MIN; // Return default value of V
+        return INT_MIN;
     }
 }
 
