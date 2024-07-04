@@ -1,4 +1,4 @@
-# Słownik na Tablicy Mieszającej Projekt 3
+# Słownik na Tablicy Mieszającej - Projekt 3
 
 ## Opis projektu
 Celem projektu jest stworzenie i badanie słownika, który jest implementowany za pomocą trzech różnych typów tablic mieszających: adresowania otwartego, łańcuchowego oraz haszowania kukułczego (Cuckoo hashing).
